@@ -1,156 +1,117 @@
-local keyCorrect = string.reverse("4321KED-YEK")
-
--- Função para tornar a GUI arrastável
-local function makeDraggable(frame)
-    local dragToggle = false
-    local dragInput, mousePos, framePos
-    
-    local function updateInput(input)
-        local delta = input.Position - mousePos
-        frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-    end
-    
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragToggle = true
-            mousePos = input.Position
-            framePos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragToggle = false
-                end
-            end)
-        end
-    end)
-    
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-    
-    frame.InputChanged:Connect(function(input)
-        if input == dragInput and dragToggle then
-            updateInput(input)
-        end
-    end)
-end
-
--- Criando a GUI da Key moderna
+-- Criando a interface gráfica do ScriptHub
 local ScreenGui = Instance.new("ScreenGui")
-local KeyFrame = Instance.new("Frame")
-local KeyBox = Instance.new("TextBox")
-local SubmitButton = Instance.new("TextButton")
-local MinimizeKey = Instance.new("TextButton")
-local MinimizedFrame = Instance.new("Frame")
-local OpenKeyButton = Instance.new("TextButton")
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-ScreenGui.Parent = game.CoreGui
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 250, 0, 150)  -- Ajuste o tamanho do hub
+Frame.Position = UDim2.new(0.5, -125, 0.5, -75)  -- Centraliza o hub na tela
+Frame.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+Frame.Parent = ScreenGui
+Frame.Active = true
+Frame.Draggable = true  -- Permite que o Frame seja movido
 
-KeyFrame.Size = UDim2.new(0, 350, 0, 200)
-KeyFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-KeyFrame.BackgroundTransparency = 0.2
-KeyFrame.BorderSizePixel = 0
-KeyFrame.Parent = ScreenGui
-makeDraggable(KeyFrame)
+-- Função para criar botões
+local function createButton(parent, text, position, callback)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0, 200, 0, 40)
+    Button.Position = position
+    Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.Text = text
+    Button.Font = Enum.Font.GothamBold
+    Button.TextSize = 18
+    Button.Parent = parent
+    Button.MouseButton1Click:Connect(callback)
+    return Button
+end
 
-KeyBox.Size = UDim2.new(0, 250, 0, 50)
-KeyBox.Position = UDim2.new(0.5, -125, 0.3, 0)
-KeyBox.PlaceholderText = "Digite a key..."
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-KeyBox.Parent = KeyFrame
-
-SubmitButton.Size = UDim2.new(0, 250, 0, 50)
-SubmitButton.Position = UDim2.new(0.5, -125, 0.65, 0)
-SubmitButton.Text = "Verificar"
-SubmitButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SubmitButton.Parent = KeyFrame
-
-MinimizeKey.Size = UDim2.new(0, 30, 0, 30)
-MinimizeKey.Position = UDim2.new(1, -40, 0, 10)
-MinimizeKey.Text = "-"
-MinimizeKey.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-MinimizeKey.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeKey.Parent = KeyFrame
-
--- Criando a caixinha minimizada
-MinimizedFrame.Size = UDim2.new(0, 100, 0, 40)
-MinimizedFrame.Position = UDim2.new(0, 10, 0.9, -50)
-MinimizedFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-MinimizedFrame.Visible = false
-MinimizedFrame.Parent = ScreenGui
-makeDraggable(MinimizedFrame)
-
-OpenKeyButton.Size = UDim2.new(1, 0, 1, 0)
-OpenKeyButton.Text = "Abrir Hub"
-OpenKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenKeyButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-OpenKeyButton.Parent = MinimizedFrame
-
-MinimizeKey.MouseButton1Click:Connect(function()
-    KeyFrame.Visible = false
-    MinimizedFrame.Visible = true
+-- Criando os botões na interface
+createButton(Frame, "COIN", UDim2.new(0, 25, 0, 30), function()
+    game:GetService("ReplicatedStorage").Remotes.generateBoost:FireServer("Coins", 480, 99999999)
 end)
 
-OpenKeyButton.MouseButton1Click:Connect(function()
-    KeyFrame.Visible = true
-    MinimizedFrame.Visible = false
+createButton(Frame, "LVL", UDim2.new(0, 25, 0, 80), function()
+    game:GetService("ReplicatedStorage").Remotes.generateBoost:FireServer("Levels", 480, 10)
 end)
 
-SubmitButton.MouseButton1Click:Connect(function()
-    if KeyBox.Text == keyCorrect then
-        KeyFrame.Visible = false
-        MinimizedFrame:Destroy()
-        showMainHub()
-    else
-        KeyBox.Text = "Key incorreta!"
+-- Criando o botão de fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -40, 0, 10)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 20
+CloseButton.Parent = Frame
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy() -- Fecha o GUI quando o botão for clicado
+end)
+
+-- Criando o botão de minimizar
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -80, 0, 10)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.TextSize = 20
+MinimizeButton.Parent = Frame
+MinimizeButton.MouseButton1Click:Connect(function()
+    -- Animação de minimizar
+    local tweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    local goal = {Size = UDim2.new(0, 250, 0, 30), Position = UDim2.new(0.5, -125, 0.5, -75)}
+    local tween = tweenService:Create(Frame, tweenInfo, goal)
+    tween:Play()
+    tween.Completed:Connect(function()
+        MinimizeButton.Visible = false
+        RestoreButton.Visible = true
+    end)
+end)
+
+-- Criando um botão para restaurar
+local RestoreButton = Instance.new("TextButton")
+RestoreButton.Size = UDim2.new(0, 30, 0, 30)
+RestoreButton.Position = UDim2.new(1, -80, 0, 10)
+RestoreButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+RestoreButton.Text = "+"
+RestoreButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RestoreButton.Font = Enum.Font.GothamBold
+RestoreButton.TextSize = 20
+RestoreButton.Parent = Frame
+RestoreButton.Visible = false
+RestoreButton.MouseButton1Click:Connect(function()
+    -- Animação de restaurar
+    local tweenService = game:GetService("TweenService")
+    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    local goal = {Size = UDim2.new(0, 250, 0, 150), Position = UDim2.new(0.5, -125, 0.5, -75)}
+    local tween = tweenService:Create(Frame, tweenInfo, goal)
+    tween:Play()
+    tween.Completed:Connect(function()
+        MinimizeButton.Visible = true
+        RestoreButton.Visible = false
+    end)
+end)
+
+-- Atalho para abrir/fechar o GUI (Ctrl Direito)
+local UserInputService = game:GetService("UserInputService")
+local isOpen = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.RightControl then
+        if isOpen then
+            ScreenGui:Destroy() -- Fecha o GUI
+        else
+            ScreenGui.Enabled = true
+            -- Animação de abrir
+            local tweenService = game:GetService("TweenService")
+            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+            local goal = {Size = UDim2.new(0, 250, 0, 150), Position = UDim2.new(0.5, -125, 0.5, -75)}
+            local tween = tweenService:Create(Frame, tweenInfo, goal)
+            tween:Play()
+        end
+        isOpen = not isOpen
     end
 end)
-
--- Criando a GUI do Script Hub
-function showMainHub()
-    local MainGui = Instance.new("ScreenGui")
-    local MainFrame = Instance.new("Frame")
-    local GiveLevel = Instance.new("TextButton")
-    local GiveCoin = Instance.new("TextButton")
-    local InfiniteCoin = Instance.new("TextButton")
-    local MinimizeMain = Instance.new("TextButton")
-
-    MainGui.Parent = game.CoreGui
-
-    MainFrame.Size = UDim2.new(0, 350, 0, 250)
-    MainFrame.Position = UDim2.new(0.5, -175, 0.5, -125)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    MainFrame.Parent = MainGui
-    makeDraggable(MainFrame)
-
-    GiveLevel.Size = UDim2.new(0, 300, 0, 50)
-    GiveLevel.Position = UDim2.new(0.5, -150, 0.2, 0)
-    GiveLevel.Text = "Give Level"
-    GiveLevel.Parent = MainFrame
-    GiveLevel.MouseButton1Click:Connect(function()
-        game:GetService("ReplicatedStorage").Remotes.generateBoost:FireServer("Levels", 480, 10)
-    end)
-
-    GiveCoin.Size = UDim2.new(0, 300, 0, 50)
-    GiveCoin.Position = UDim2.new(0.5, -150, 0.5, 0)
-    GiveCoin.Text = "Give Coin"
-    GiveCoin.Parent = MainFrame
-    GiveCoin.MouseButton1Click:Connect(function()
-        game:GetService("ReplicatedStorage").Remotes.generateBoost:FireServer("Coins", 480, 99999999)
-    end)
-
-    InfiniteCoin.Size = UDim2.new(0, 300, 0, 50)
-    InfiniteCoin.Position = UDim2.new(0.5, -150, 0.8, 0)
-    InfiniteCoin.Text = "Infinite Coin"
-    InfiniteCoin.Parent = MainFrame
-    InfiniteCoin.MouseButton1Click:Connect(function()
-        while true do
-            game:GetService("ReplicatedStorage").Remotes.generateBoost:FireServer("Coins", 480, 99999999)
-            wait(1)
-        end
-    end)
-end
